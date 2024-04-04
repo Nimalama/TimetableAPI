@@ -13,8 +13,7 @@ const port = 6173;
 app.use(express.json());
 dotenv.config();
 
-// add cors fro http://127.0.0.1:5173/
-// add cors fro http://localhost:5173/
+
 // Define the allowed origins
 const allowedOrigins = ['http://127.0.0.1:5173', 'http://localhost:5173'];
 

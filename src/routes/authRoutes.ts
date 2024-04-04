@@ -38,7 +38,7 @@ router.post('/register', async (req: Request, res: Response) => {
     );
 
     // Send response with user data and token
-    res.status(201).json({ fullName: newUser.fullName, email: newUser.email, userType: newUser.userType, token });
+    res.status(201).json({ data: { fullName: newUser.fullName, email: newUser.email, userType: newUser.userType, token } });
   } catch (error) {
     console.error('Error registering user: ', error);
     res.status(500).json({ message: 'Internal Server Error' });
