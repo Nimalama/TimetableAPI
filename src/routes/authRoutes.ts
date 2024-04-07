@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import express, { Request, Response } from 'express';
+import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 
 import { JWT_SECRET_KEY } from '../constants/consts';
@@ -38,7 +39,9 @@ router.post('/register', async (req: Request, res: Response) => {
     );
 
     // Send response with user data and token
-    res.status(201).json({ data: { fullName: newUser.fullName, email: newUser.email, userType: newUser.userType, token } });
+    res
+      .status(201)
+      .json({ data: { fullName: newUser.fullName, email: newUser.email, userType: newUser.userType, token } });
   } catch (error) {
     console.error('Error registering user: ', error);
     res.status(500).json({ message: 'Internal Server Error' });
@@ -75,7 +78,7 @@ router.post('/login', async (req: Request, res: Response) => {
 
 // Route for validating token
 router.get('/validateToken', (req: Request, res: Response) => {
-  const token = req.headers['x-auth-token'];
+  const { token } = req.query;
 
   // Check if token is provided
   if (!token) {
@@ -90,6 +93,75 @@ router.get('/validateToken', (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error validating token: ', error);
     res.status(401).json({ message: 'Invalid token' });
+  }
+});
+
+const CLIENT_ID = '682374523124-chs6fq2ctt29ngk5omi23qqv62qm3bg2.apps.googleusercontent.com'; // Replace with your Google client ID
+
+router.post('/google-signin', async (req: Request, res: Response) => {
+  try {
+    const { idToken, userType } = req.body;
+
+    // Verify the token
+    const client = new OAuth2Client(CLIENT_ID);
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: CLIENT_ID
+    });
+    const payload = ticket.getPayload();
+
+    if (!payload) {
+      return res.status(400).json({ message: 'Invalid token' });
+    }
+
+    // Extract user data
+    const { email, name } = payload;
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ where: { email } });
+
+    if (existingUser) {
+      // If user exists, generate JWT token and send response
+      const token = jwt.sign(
+        {
+          id: existingUser.id,
+          email: existingUser.email,
+          fullName: existingUser.fullName,
+          userType: existingUser.userType
+        },
+        JWT_SECRET_KEY,
+        { expiresIn: '24h' }
+      );
+
+      return res.status(200).json({
+        data: { fullName: existingUser.fullName, email: existingUser.email, userType: existingUser.userType, token }
+      });
+    }
+    // randon 8 digits
+    const password = Math.floor(10000000 + Math.random() * 90000000).toString();
+
+    // If user does not exist, create a new user
+    const newUser = await User.create({
+      email: email ?? '',
+      fullName: name ?? '',
+      userType,
+      password
+    });
+
+    // Generate JWT token for new user
+    const token = jwt.sign(
+      { id: newUser.id, email: newUser.email, fullName: newUser.fullName, userType: newUser.userType },
+      JWT_SECRET_KEY,
+      { expiresIn: '24h' }
+    );
+
+    // Send response with user data and token
+    res
+      .status(201)
+      .json({ data: { fullName: newUser.fullName, email: newUser.email, userType: newUser.userType, token } });
+  } catch (error) {
+    console.error('Error signing in with Google: ', error);
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 });
 

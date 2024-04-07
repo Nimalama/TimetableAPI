@@ -4,7 +4,9 @@ import express, { Request, Response } from 'express';
 import mysql from 'mysql';
 
 import { DB_HOST, DB_NAME, DB_PASSWORD, DB_USERNAME } from './constants/consts';
-import router from './routes/authRoutes';
+import authRouter from './routes/authRoutes';
+import classRouter from './routes/classroomRoutes';
+import courseRouter from './routes/courseRoutes';
 
 const app = express();
 const port = 6173;
@@ -12,7 +14,6 @@ const port = 6173;
 // Middleware to parse JSON bodies
 app.use(express.json());
 dotenv.config();
-
 
 // Define the allowed origins
 const allowedOrigins = ['http://127.0.0.1:5173', 'http://localhost:5173'];
@@ -57,7 +58,13 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // Use user routes
-app.use('/api/user', router);
+app.use('/api/user', authRouter);
+
+// Use classroom routes
+app.use('/api/classroom', classRouter);
+
+// Use course routes
+app.use('/api/course', courseRouter);
 
 // Start the server
 app.listen(port, () => {
