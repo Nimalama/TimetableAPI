@@ -61,4 +61,31 @@ router.delete('/:id', validateAdminToken, async (req: Request, res: Response) =>
   }
 });
 
+// update name, credits, code
+router.put('/:id', validateAdminToken, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name, code, credits } = req.body;
+
+    // Check if course exists
+    const course = await Course.findByPk(id);
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    // Update course
+    course.name = name;
+    course.code = code;
+    course.credits = credits;
+    await course.save();
+
+    // Send response with updated course data
+    res.json({ data: course });
+  } catch (error) {
+    console.error('Error updating course: ', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
 export default router;

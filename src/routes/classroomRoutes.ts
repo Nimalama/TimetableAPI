@@ -61,4 +61,31 @@ router.delete('/:id', validateAdminToken, async (req: Request, res: Response) =>
   }
 });
 
+// update name, capacity
+router.put('/:id', validateAdminToken, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name, capacity } = req.body;
+
+    // Check if classroom exists
+    const classroom = await Classroom.findByPk(id);
+
+    if (!classroom) {
+      return res.status(404).json({ message: 'Classroom not found' });
+    }
+
+    // Update classroom
+    classroom.name = name;
+    classroom.capacity = capacity;
+
+    await classroom.save();
+
+    // Send response with updated classroom
+    res.json({ data: classroom });
+  } catch (error) {
+    console.error('Error updating classroom: ', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
 export default router;
