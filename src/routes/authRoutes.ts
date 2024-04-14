@@ -164,5 +164,53 @@ router.post('/google-signin', async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
-
+router.patch('/authProfile', validateToken, async (req, res) => {
+  const { profilePic, address, department, fullName } = req.body;
+  const userId = req.user?.id; // Extract user ID from decoded token
+ 
+  try {
+    const user = await User.findByPk(userId);
+ 
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+ 
+    // Update user fields
+    if (profilePic !== undefined) user.profilePic = profilePic;
+    if (address !== undefined) user.address = address;
+    if (department !== undefined) user.department = department;
+    if (fullName !== undefined) user.fullName = fullName;
+ 
+    // Save updated user
+    await user.save();
+ 
+    return res.status(200).json({ message: 'Profile updated successfully', user });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+ 
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+ 
+router.get('/authProfile', validateToken, async (req, res) => {
+  const userId = req.user?.id; // Extract user ID from decoded token
+ 
+  try {
+    const user = await User.findByPk(userId);
+ 
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+ 
+    // Extract profile information
+    const { profilePic, address, department, fullName, email, userType } = user;
+ 
+    // Send profile information in response
+    return res.status(200).json({ profilePic, address, department, fullName, userType, email });
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+ 
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
 export default router;
