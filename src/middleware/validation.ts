@@ -8,7 +8,7 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
-      user?: { userType: string }; // Modify this according to your user object structure
+      user?: { userType: string; id: string }; // Modify this according to your user object structure
     }
   }
 }
