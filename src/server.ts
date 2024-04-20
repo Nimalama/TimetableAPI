@@ -1,3 +1,5 @@
+import path from 'path';
+
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express, { Request, Response } from 'express';
@@ -56,6 +58,8 @@ app.get('/', (req: Request, res: Response) => {
     res.json(results);
   });
 });
+
+app.use('/src/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Use user routes
 app.use('/api/user', authRouter);

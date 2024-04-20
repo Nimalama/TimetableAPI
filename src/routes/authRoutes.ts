@@ -1,7 +1,10 @@
+import path from 'path';
+
 import bcrypt from 'bcrypt';
 import express, { Request, Response } from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
+import multer from 'multer';
 
 import { JWT_SECRET_KEY } from '../constants/consts';
 import { validateToken } from '../middleware/validation';
@@ -166,8 +169,21 @@ router.post('/google-signin', async (req: Request, res: Response) => {
   }
 });
 
-router.patch('/authProfile', validateToken, async (req, res) => {
-  const { profilePic, address, department, fullName } = req.body;
+// Define storage for the uploaded files
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'src/uploads/'); // Destination folder for uploaded files
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.fieldname + '-' + String(Date.now()) + path.extname(file.originalname)); // Set filename
+  }
+});
+
+// Create upload middleware
+const upload = multer({ storage });
+
+router.patch('/authProfile', validateToken, upload.single('profilePic'), async (req, res) => {
+  const { address, department, fullName } = req.body;
   const userId = req.user?.id; // Extract user ID from decoded token
 
   try {
@@ -178,7 +194,10 @@ router.patch('/authProfile', validateToken, async (req, res) => {
     }
 
     // Update user fields
-    if (profilePic !== undefined) user.profilePic = profilePic;
+    if (req.file) {
+      // If a new profile pic is uploaded, update profilePic field
+      user.profilePic = req.file.path; // Assuming you store the path to the file in the database
+    }
     if (address !== undefined) user.address = address;
     if (department !== undefined) user.department = department;
     if (fullName !== undefined) user.fullName = fullName;
