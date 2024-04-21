@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import path from 'path';
 
 import bcrypt from 'bcrypt';
@@ -5,6 +6,7 @@ import express, { Request, Response } from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 import multer from 'multer';
+import nodemailer from 'nodemailer';
 
 import { JWT_SECRET_KEY } from '../constants/consts';
 import { validateToken } from '../middleware/validation';
@@ -229,6 +231,49 @@ router.get('/authProfile', validateToken, async (req, res) => {
     console.error('Error fetching profile:', error);
 
     return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+
+  // Find user by email (you might use a database query here)
+  const user = await User.findOne({ where: { email } });
+
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  // Generate token
+  const token = crypto.randomBytes(20).toString('hex');
+
+  // Save the token in the user record or in a temporary store (e.g., Redis) along with the user ID
+  // user.resetToken = token;
+  // user.resetTokenExpiry = Date.now() + 3600000; // Token expires in 1 hour
+
+  // Send reset password email
+  const transporter = nodemailer.createTransport({
+    // Configure email service
+    service: 'gmail',
+    auth: {
+      user: 'your@example.com',
+      pass: 'yourpassword'
+    }
+  });
+
+  const mailOptions = {
+    from: 'your@example.com',
+    to: email,
+    subject: 'Password Reset',
+    text: `Click this link to reset your password: http://localhost:3000/reset-password?token=${token}`
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.json({ message: 'Password reset email sent' });
+  } catch (error) {
+    console.error('Error sending email:', error);
+    res.status(500).json({ message: 'Error sending reset email' });
   }
 });
 
