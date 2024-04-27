@@ -2,6 +2,8 @@ import { DataTypes, Model } from 'sequelize';
 
 import { sequelize } from '../../sequelize';
 
+import { User } from './user.model';
+
 class Token extends Model {
   public id!: number;
   public userId!: number;
@@ -19,7 +21,11 @@ Token.init(
     },
     userId: {
       type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: false
+      allowNull: false,
+      references: {
+        model: User,
+        key: 'id'
+      }
     },
     token: {
       type: DataTypes.STRING,
