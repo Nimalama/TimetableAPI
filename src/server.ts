@@ -9,6 +9,7 @@ import { DB_HOST, DB_NAME, DB_PASSWORD, DB_USERNAME } from './constants/consts';
 import authRouter from './routes/authRoutes';
 import classRouter from './routes/classroomRoutes';
 import courseRouter from './routes/courseRoutes';
+import timeSlotRoutes from './routes/timeslotRoutes';
 
 const app = express();
 const port = 6173;
@@ -69,6 +70,8 @@ app.use('/api/classroom', classRouter);
 
 // Use course routes
 app.use('/api/course', courseRouter);
+
+app.use('/api/timeslots', timeSlotRoutes);
 
 // Start the server
 app.listen(port, () => {
