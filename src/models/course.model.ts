@@ -7,6 +7,9 @@ export interface CourseAttributes {
   name: string;
   code: string;
   credits: number;
+  coursePic?: string;
+  tags?: string[];
+  category: string; // Add category field
 }
 
 export interface CourseInstance extends Model<CourseAttributes>, CourseAttributes {}
@@ -32,7 +35,15 @@ export const Course = sequelize.define<CourseInstance>(
     credits: {
       type: DataTypes.INTEGER,
       allowNull: false
-    }
+    },
+    coursePic: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    category: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
   },
   {
     timestamps: true

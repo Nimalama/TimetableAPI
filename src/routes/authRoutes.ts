@@ -182,7 +182,12 @@ const storage = multer.diskStorage({
 });
 
 // Create upload middleware
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  }
+});
 
 router.patch('/authProfile', validateToken, upload.single('profilePic'), async (req, res) => {
   const { address, department, fullName } = req.body;
@@ -237,9 +242,12 @@ router.get('/authProfile', validateToken, async (req, res) => {
 router.post('/forgot-password', async (req, res) => {
   const { email } = req.body;
 
-  // Find user by email (you might use a database query here)
-  const user = await User.findOne({ where: { email } });
+  const emailFromRequest = email as string;
 
+  // Find user by email (you might use a database query here)
+  const user = await User.findOne({ where: { email: emailFromRequest } });
+
+  console.log(email);
   if (!user) {
     return res.status(404).json({ message: 'User not found' });
   }
@@ -263,7 +271,7 @@ router.post('/forgot-password', async (req, res) => {
 
   const mailOptions = {
     from: 'your@example.com',
-    to: email,
+    to: emailFromRequest,
     subject: 'Password Reset',
     text: `Click this link to reset your password: http://localhost:3000/reset-password?token=${token}`
   };
