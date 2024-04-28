@@ -9,8 +9,12 @@ export interface CourseAttributes {
   credits: number;
   coursePic?: string;
   tags?: string[];
+<<<<<<< HEAD
   category: string; 
   description: string; // Add category field
+=======
+  category: string; // Add category field
+>>>>>>> sprint2
 }
 
 export interface CourseInstance extends Model<CourseAttributes>, CourseAttributes {}
@@ -45,10 +49,13 @@ export const Course = sequelize.define<CourseInstance>(
       type: DataTypes.STRING,
       allowNull: true
     },
+<<<<<<< HEAD
     description: {
       type: DataTypes.STRING,
       allowNull: true
     },
+=======
+>>>>>>> sprint2
   },
   {
     timestamps: true
