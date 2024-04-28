@@ -32,7 +32,7 @@ router.get('/', validateAdminToken, async (req: Request, res: Response) => {
         {
           model: Course,
           as: 'course',
-          attributes: ['id', 'name']
+          attributes: ['id', 'name', 'code']
         },
         {
           model: TimeSlot,
@@ -49,7 +49,7 @@ router.get('/', validateAdminToken, async (req: Request, res: Response) => {
 
     const classRoutinesWithStudents = await getClassRoutinesWithStudents(classRoutines);
 
-    return res.status(200).json(classRoutinesWithStudents);
+    return res.status(200).json({ data: classRoutinesWithStudents });
   } catch (error) {
     console.error('Error fetching class routines:', error);
 
@@ -73,7 +73,7 @@ router.get('/teacher', validateTeacherToken, async (req: Request, res: Response)
         {
           model: Course,
           as: 'course',
-          attributes: ['id', 'name']
+          attributes: ['id', 'name', 'code']
         },
         {
           model: TimeSlot,
@@ -83,14 +83,14 @@ router.get('/teacher', validateTeacherToken, async (req: Request, res: Response)
         {
           model: User,
           as: 'lecturer',
-          attributes: ['id', 'fullName']
+          attributes: ['id', 'fullName', 'email']
         }
       ]
     });
 
     const classRoutinesWithStudents = await getClassRoutinesWithStudents(classRoutines);
 
-    return res.status(200).json(classRoutinesWithStudents);
+    return res.status(200).json({ data: classRoutinesWithStudents });
   } catch (error) {
     console.error('Error fetching class routines:', error);
 
@@ -119,7 +119,7 @@ router.get('/student', validateStudentToken, async (req: Request, res: Response)
         {
           model: Course,
           as: 'course',
-          attributes: ['id', 'name']
+          attributes: ['id', 'name', 'code']
         },
         {
           model: TimeSlot,
@@ -134,7 +134,7 @@ router.get('/student', validateStudentToken, async (req: Request, res: Response)
       ]
     });
 
-    return res.status(200).json(classRoutines);
+    return res.status(200).json({ data: classRoutines });
   } catch (error) {
     console.error('Error fetching class routines:', error);
 

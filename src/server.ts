@@ -8,6 +8,7 @@ import mysql from 'mysql';
 import { DB_HOST, DB_NAME, DB_PASSWORD, DB_USERNAME } from './constants/consts';
 import authRouter from './routes/authRoutes';
 import classRouter from './routes/classroomRoutes';
+import routineRoutes from './routes/classroutineRoutes';
 import courseRouter from './routes/courseRoutes';
 import timeSlotRoutes from './routes/timeslotRoutes';
 
@@ -72,6 +73,8 @@ app.use('/api/classroom', classRouter);
 app.use('/api/course', courseRouter);
 
 app.use('/api/timeslots', timeSlotRoutes);
+
+app.use('/api/classroutine', routineRoutes);
 
 // Start the server
 app.listen(port, () => {

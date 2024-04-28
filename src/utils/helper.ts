@@ -8,7 +8,7 @@ export async function getClassRoutinesWithStudents(classRoutines: any): Promise<
 
     const students = await User.findAll({
       where: { id: studentIds },
-      attributes: ['id', 'fullName']
+      attributes: ['id', 'fullName', 'email']
     });
 
     const classRoutineWithStudents = {

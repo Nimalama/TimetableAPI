@@ -13,7 +13,7 @@ export interface ClassRoutineAttributes {
   courseId: string;
   timeSlotId: string;
   lecturerId: string;
-  studentIds: string[];
+  studentIds: string;
 }
 
 export interface ClassRoutineInstance extends Model<ClassRoutineAttributes>, ClassRoutineAttributes {}
@@ -43,7 +43,7 @@ export const ClassRoutine = sequelize.define<ClassRoutineInstance>(
       allowNull: false
     },
     studentIds: {
-      type: DataTypes.ARRAY(DataTypes.STRING),
+      type: DataTypes.STRING,
       allowNull: false
     }
   },

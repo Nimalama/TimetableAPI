@@ -28,11 +28,7 @@ const upload = multer({
 // create a new classroom
 router.post('/', validateAdminToken, upload.single('coursePic'), async (req: Request, res: Response) => {
   try {
-<<<<<<< HEAD
     const { name, code, credits, category, description } = req.body;
-=======
-    const { name, code, credits, category } = req.body;
->>>>>>> sprint2
 
     let coursePic = '';
 
@@ -47,11 +43,7 @@ router.post('/', validateAdminToken, upload.single('coursePic'), async (req: Req
     }
 
     // Create new course
-<<<<<<< HEAD
-    const newCourse = await Course.create({ name, code, credits, category, coursePic,description });
-=======
-    const newCourse = await Course.create({ name, code, credits, category, coursePic });
->>>>>>> sprint2
+    const newCourse = await Course.create({ name, code, credits, category, coursePic, description });
 
     // Send response with course data
     res.status(201).json({ data: newCourse });
@@ -100,11 +92,7 @@ router.delete('/:id', validateAdminToken, async (req: Request, res: Response) =>
 router.patch('/:id', validateAdminToken, upload.single('coursePic'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-<<<<<<< HEAD
-    const { name, code, credits, category , description} = req.body;
-=======
-    const { name, code, credits, category } = req.body;
->>>>>>> sprint2
+    const { name, code, credits, category, description } = req.body;
 
     // Check if course exists
     const course = await Course.findByPk(id);
@@ -122,11 +110,8 @@ router.patch('/:id', validateAdminToken, upload.single('coursePic'), async (req:
     course.code = code;
     course.credits = credits;
     course.category = category;
-<<<<<<< HEAD
     course.description = description;
-=======
 
->>>>>>> sprint2
     await course.save();
 
     // Send response with updated course data

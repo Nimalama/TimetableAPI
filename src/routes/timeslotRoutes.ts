@@ -2,13 +2,13 @@ import { addDays, endOfDay, format, startOfDay } from 'date-fns';
 import express, { Request, Response } from 'express';
 import { Op } from 'sequelize';
 
-import { validateAdminToken } from '../middleware/validation';
+import { validateAdminToken, validateToken } from '../middleware/validation';
 import { TimeSlot } from '../models/timeslot.model';
 
 const router = express.Router();
 
 // GET /timeslots - Get time slots for the next 7 days
-router.get('/', async (req, res) => {
+router.get('/', validateToken, async (req, res) => {
   try {
     // Define the start date and end date for one week from now
     const startDate = startOfDay(new Date());
@@ -39,7 +39,7 @@ router.post('/', validateAdminToken, async (req: Request, res: Response) => {
     const timeSlot = await TimeSlot.create({ day, startTime, endTime });
 
     return res.status(201).json(timeSlot);
-  } catch (error) {
+  } catch (error) { 
     console.error('Error creating time slot:', error);
 
     return res.status(500).json({ error: 'Failed to create time slot' });
