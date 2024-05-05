@@ -38,7 +38,7 @@ router.post('/', validateAdminToken, upload.single('coursePic'), async (req: Req
     }
 
     // Check for missing fields
-    if (!name || !code || !credits || !category || !coursePic) {
+    if (!name || !code || !credits || !category) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 

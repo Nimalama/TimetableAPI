@@ -198,7 +198,7 @@ router.get('/requirements', validateToken, async (req: Request, res: Response) =
       }
     });
 
-    return res.status(200).json({ courses, lecturers, students, classrooms, timeSlots });
+    return res.status(200).json({ data: { courses, lecturers, students, classrooms, timeSlots } });
   } catch (error) {
     console.error('Error fetching class routine requirements:', error);
 
