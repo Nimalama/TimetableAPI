@@ -6,6 +6,7 @@ import express, { Request, Response } from 'express';
 import mysql from 'mysql';
 
 import { DB_HOST, DB_NAME, DB_PASSWORD, DB_USERNAME } from './constants/consts';
+import attendanceRoutes from './routes/attendanceRoutes';
 import authRouter from './routes/authRoutes';
 import classRouter from './routes/classroomRoutes';
 import routineRoutes from './routes/classroutineRoutes';
@@ -75,6 +76,8 @@ app.use('/api/course', courseRouter);
 app.use('/api/timeslots', timeSlotRoutes);
 
 app.use('/api/classroutine', routineRoutes);
+
+app.use('/api/attendance', attendanceRoutes);
 
 // Start the server
 app.listen(port, () => {

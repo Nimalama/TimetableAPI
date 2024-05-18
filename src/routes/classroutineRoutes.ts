@@ -9,8 +9,8 @@ import {
   validateToken
 } from '../middleware/validation';
 import { Classroom } from '../models/classroom.model';
+import { ClassRoutine } from '../models/classroutine.model';
 import { Course } from '../models/course.model';
-import { ClassRoutine } from '../models/courseroutine.model';
 import { TimeSlot } from '../models/timeslot.model';
 import { User } from '../models/user.model';
 import { getClassRoutinesWithStudents } from '../utils/helper';
@@ -134,7 +134,16 @@ router.get('/student', validateStudentToken, async (req: Request, res: Response)
       ]
     });
 
-    return res.status(200).json({ data: classRoutines });
+    const today = new Date().toISOString().split('T')[0];
+
+    // Filter data based on timeSlot day being today or greater
+    const filteredData = classRoutines.filter((item: any) => {
+      const itemDate = item.timeSlot.day.split('T')[0];
+
+      return itemDate >= today;
+    });
+
+    return res.status(200).json({ data: filteredData });
   } catch (error) {
     console.error('Error fetching class routines:', error);
 
@@ -150,7 +159,7 @@ router.post('/', validateAdminToken, async (req, res) => {
     const serializedStudentIds = Array.isArray(studentIds) ? studentIds.join(',') : studentIds;
 
     // Create the class routine
-    const classRoutine = await ClassRoutine.create({
+    await ClassRoutine.create({
       classRoomId,
       courseId,
       timeSlotId,
@@ -158,7 +167,7 @@ router.post('/', validateAdminToken, async (req, res) => {
       studentIds: serializedStudentIds // Pass the serialized studentIds
     });
 
-    return res.status(201).json(classRoutine);
+    return res.status(201).json({ data: true });
   } catch (error) {
     console.error('Error creating class routine:', error);
 

@@ -75,7 +75,9 @@ router.post('/login', async (req: Request, res: Response) => {
     );
 
     // Send response with user data and token
-    res.status(200).json({ data: { fullName: user.fullName, email: user.email, userType: user.userType, token } });
+    res
+      .status(200)
+      .json({ data: { id: user.id, fullName: user.fullName, email: user.email, userType: user.userType, token } });
   } catch (error) {
     console.error('Error logging in: ', error);
     res.status(500).json({ message: 'Internal Server Error' });
