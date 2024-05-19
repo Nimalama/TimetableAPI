@@ -1,6 +1,7 @@
 import { DataTypes, Model } from 'sequelize';
 
 import { sequelize } from '../../sequelize';
+import { COURSE_STATUS } from '../constants/consts';
 
 export interface CourseAttributes {
   id?: number;
@@ -11,9 +12,10 @@ export interface CourseAttributes {
   tags?: string[];
   category: string;
   description: string;
+  status: string;
 }
 
-export interface CourseInstance extends Model<CourseAttributes>, CourseAttributes {}
+export interface CourseInstance extends Model<CourseAttributes>, CourseAttributes { }
 
 export const Course = sequelize.define<CourseInstance>(
   'Course',
@@ -44,6 +46,11 @@ export const Course = sequelize.define<CourseInstance>(
     category: {
       type: DataTypes.STRING,
       allowNull: true
+    },
+    status: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: COURSE_STATUS.UNENROLLED
     },
     description: {
       type: DataTypes.STRING,

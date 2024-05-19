@@ -54,7 +54,7 @@ module.exports = {
       timeSlots.map((slot) => ({
         ...slot,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })),
       {}
     );

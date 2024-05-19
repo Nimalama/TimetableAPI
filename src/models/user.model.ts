@@ -11,9 +11,10 @@ export interface UserAttributes {
   profilePic?: string | null;
   address?: string | null;
   department?: string | null;
+  category?: string;
 }
 
-export interface UserInstance extends Model<UserAttributes>, UserAttributes {}
+export interface UserInstance extends Model<UserAttributes>, UserAttributes { }
 
 export const User = sequelize.define<UserInstance>(
   'User',
@@ -51,6 +52,11 @@ export const User = sequelize.define<UserInstance>(
     department: {
       type: DataTypes.STRING, // Define Department field
       allowNull: true // Allow null if no department provided
+    },
+    category: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'Bachelors'
     }
   },
   {

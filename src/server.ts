@@ -10,6 +10,7 @@ import attendanceRoutes from './routes/attendanceRoutes';
 import authRouter from './routes/authRoutes';
 import classRouter from './routes/classroomRoutes';
 import routineRoutes from './routes/classroutineRoutes';
+import commentRoutes from './routes/commentRoutes';
 import courseRouter from './routes/courseRoutes';
 import timeSlotRoutes from './routes/timeslotRoutes';
 
@@ -78,6 +79,8 @@ app.use('/api/timeslots', timeSlotRoutes);
 app.use('/api/classroutine', routineRoutes);
 
 app.use('/api/attendance', attendanceRoutes);
+
+app.use('/api/comment', commentRoutes);
 
 // Start the server
 app.listen(port, () => {

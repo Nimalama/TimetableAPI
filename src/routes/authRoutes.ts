@@ -47,7 +47,13 @@ router.post('/register', async (req: Request, res: Response) => {
     // Send response with user data and token
     res
       .status(201)
-      .json({ data: { fullName: newUser.fullName, email: newUser.email, userType: newUser.userType, token } });
+      .json({
+        data:
+        {
+          fullName: newUser.fullName,
+          email: newUser.email, userType: newUser.userType, token, category: newUser.category
+        }
+      });
   } catch (error) {
     console.error('Error registering user: ', error);
     res.status(500).json({ message: 'Internal Server Error' });
@@ -77,7 +83,14 @@ router.post('/login', async (req: Request, res: Response) => {
     // Send response with user data and token
     res
       .status(200)
-      .json({ data: { id: user.id, fullName: user.fullName, email: user.email, userType: user.userType, token } });
+      .json({
+        data:
+        {
+          id: user.id, fullName: user.fullName,
+          email: user.email, userType: user.userType, token,
+          category: user.category
+        }
+      });
   } catch (error) {
     console.error('Error logging in: ', error);
     res.status(500).json({ message: 'Internal Server Error' });

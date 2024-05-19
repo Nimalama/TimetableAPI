@@ -175,6 +175,39 @@ router.post('/', validateAdminToken, async (req, res) => {
   }
 });
 
+// update fields
+router.patch('/:id', validateAdminToken, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { classRoomId, courseId, timeSlotId, lecturerId, studentIds } = req.body;
+
+    // Ensure studentIds is an array
+    const serializedStudentIds = Array.isArray(studentIds) ? studentIds.join(',') : studentIds;
+
+    // Find the class routine
+    const classRoutine = await ClassRoutine.findByPk(id);
+
+    if (!classRoutine) {
+      return res.status(404).json({ message: 'Class routine not found' });
+    }
+
+    // Update the class routine
+    await classRoutine.update({
+      classRoomId,
+      courseId,
+      timeSlotId,
+      lecturerId,
+      studentIds: serializedStudentIds // Pass the serialized studentIds
+    });
+
+    return res.status(200).json({ data: true });
+  } catch (error) {
+    console.error('Error updating class routine:', error);
+
+    return res.status(500).json({ error });
+  }
+});
+
 router.get('/requirements', validateToken, async (req: Request, res: Response) => {
   try {
     const courses = await Course.findAll({

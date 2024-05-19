@@ -28,7 +28,7 @@ const upload = multer({
 // create a new classroom
 router.post('/', validateAdminToken, upload.single('coursePic'), async (req: Request, res: Response) => {
   try {
-    const { name, code, credits, category, description } = req.body;
+    const { name, code, credits, category, description, status } = req.body;
 
     let coursePic = '';
 
@@ -38,12 +38,12 @@ router.post('/', validateAdminToken, upload.single('coursePic'), async (req: Req
     }
 
     // Check for missing fields
-    if (!name || !code || !credits || !category) {
+    if (!name || !code || !credits || !category || !status) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
     // Create new course
-    const newCourse = await Course.create({ name, code, credits, category, coursePic, description });
+    const newCourse = await Course.create({ name, code, credits, category, coursePic, description, status });
 
     // Send response with course data
     res.status(201).json({ data: newCourse });
@@ -92,7 +92,7 @@ router.delete('/:id', validateAdminToken, async (req: Request, res: Response) =>
 router.patch('/:id', validateAdminToken, upload.single('coursePic'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, code, credits, category, description } = req.body;
+    const { name, code, credits, category, description, status } = req.body;
 
     // Check if course exists
     const course = await Course.findByPk(id);
@@ -111,6 +111,7 @@ router.patch('/:id', validateAdminToken, upload.single('coursePic'), async (req:
     course.credits = credits;
     course.category = category;
     course.description = description;
+    course.status = status;
 
     await course.save();
 

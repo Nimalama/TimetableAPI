@@ -1,6 +1,3 @@
-import { Op } from 'sequelize';
-
-import { Attendance } from '../models/attendance.model';
 import { User } from '../models/user.model';
 
 export async function getClassRoutinesWithStudents(classRoutines: any): Promise<any> {
