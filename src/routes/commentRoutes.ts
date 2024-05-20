@@ -1,13 +1,13 @@
 import express, { Request, Response } from 'express';
 
-import { validateAdminToken, validateStudentToken } from '../middleware/validation';
+import { validateAdminToken, validateToken } from '../middleware/validation';
 import { Comment } from '../models/comment.model';
 import { User } from '../models/user.model';
 
 const router = express.Router();
 
 // create a new comment
-router.post('/', validateStudentToken, async (req: Request, res: Response) => {
+router.post('/', validateToken, async (req: Request, res: Response) => {
   try {
     const id = req.user?.id ?? '0';
     const { comment, classRoutineId } = req.body;

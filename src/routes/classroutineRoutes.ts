@@ -1,6 +1,6 @@
 import { addDays, endOfDay, format, startOfDay } from 'date-fns';
 import express, { Request, Response } from 'express';
-import { Op } from 'sequelize';
+import { Op, UniqueConstraintError } from 'sequelize';
 
 import {
   validateAdminToken,
@@ -168,10 +168,27 @@ router.post('/', validateAdminToken, async (req, res) => {
     });
 
     return res.status(201).json({ data: true });
-  } catch (error) {
-    console.error('Error creating class routine:', error);
+  } catch (err) {
+    console.error('Error updating class routine:', err);
 
-    return res.status(500).json({ error });
+    if (err instanceof UniqueConstraintError) {
+      // Handle unique constraint errors based on the constraint name
+      if (err.errors) {
+        for (const e of err.errors) {
+          if (e.path === 'unique_combination_classroom_course_timeslot') {
+            return res.status(400).json('The combination of classroom, course, and timeslot must be unique.');
+          } else if (e.path === 'unique_combination_lecturer_timeslot') {
+            return res.status(400).json('The combination of lecturer and timeslot must be unique.');
+          } else if (e.path === 'unique_combination_studentids_timeslot') {
+            return res.status(400).json('The combination of students and timeslot must be unique.');
+          } else if (e.path === 'unique_combination_classroom_timeslot') {
+            return res.status(400).json('The combination of classroom and timeslot must be unique.');
+          }
+        }
+      }
+    }
+
+    return res.status(500).json({ message: 'An unexpected error occurred. Please try again later.' });
   }
 });
 
@@ -201,10 +218,27 @@ router.patch('/:id', validateAdminToken, async (req: Request, res: Response) => 
     });
 
     return res.status(200).json({ data: true });
-  } catch (error) {
-    console.error('Error updating class routine:', error);
+  } catch (err) {
+    console.error('Error updating class routine:', err);
 
-    return res.status(500).json({ error });
+    if (err instanceof UniqueConstraintError) {
+      // Handle unique constraint errors based on the constraint name
+      if (err.errors) {
+        for (const e of err.errors) {
+          if (e.path === 'unique_combination_classroom_course_timeslot') {
+            return res.status(400).json('The combination of classroom, course, and timeslot must be unique.');
+          } else if (e.path === 'unique_combination_lecturer_timeslot') {
+            return res.status(400).json('The combination of lecturer and timeslot must be unique.');
+          } else if (e.path === 'unique_combination_studentids_timeslot') {
+            return res.status(400).json('The combination of students and timeslot must be unique.');
+          } else if (e.path === 'unique_combination_classroom_timeslot') {
+            return res.status(400).json('The combination of classroom and timeslot must be unique.');
+          }
+        }
+      }
+    }
+
+    return res.status(500).json({ message: 'An unexpected error occurred. Please try again later.' });
   }
 });
 
@@ -230,7 +264,7 @@ router.get('/requirements', validateToken, async (req: Request, res: Response) =
     });
 
     const startDate = startOfDay(new Date());
-    const endDate = endOfDay(addDays(startOfDay(new Date()), 5));
+    const endDate = endOfDay(addDays(startOfDay(new Date()), 20));
 
     const timeSlots = await TimeSlot.findAll({
       where: {
@@ -241,7 +275,9 @@ router.get('/requirements', validateToken, async (req: Request, res: Response) =
     });
 
     return res.status(200).json({ data: { courses, lecturers, students, classrooms, timeSlots } });
-  } catch (error) {
+  } catch (err) {
+    const error = err as Error;
+
     console.error('Error fetching class routine requirements:', error);
 
     return res.status(500).json({ error });
