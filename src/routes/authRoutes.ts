@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import path from 'path';
 
 import bcrypt from 'bcrypt';
@@ -6,11 +5,23 @@ import express, { Request, Response } from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 import multer from 'multer';
-import nodemailer from 'nodemailer';
+import nodemailer, { TransportOptions } from 'nodemailer';
 
-import { JWT_SECRET_KEY } from '../constants/consts';
+import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, JWT_SECRET_KEY, REFRESH_TOKEN } from '../constants/consts';
 import { validateToken } from '../middleware/validation';
 import { User } from '../models/user.model';
+
+// Create OAuth2 client
+const oAuth2Client = new OAuth2Client(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
+
+oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
+
+// Generate access token
+const getAccessToken = async (): Promise<string> => {
+  const { token } = await oAuth2Client.getAccessToken();
+
+  return token ?? '';
+};
 
 const router = express.Router();
 
@@ -45,15 +56,15 @@ router.post('/register', async (req: Request, res: Response) => {
     );
 
     // Send response with user data and token
-    res
-      .status(201)
-      .json({
-        data:
-        {
-          fullName: newUser.fullName,
-          email: newUser.email, userType: newUser.userType, token, category: newUser.category
-        }
-      });
+    res.status(201).json({
+      data: {
+        fullName: newUser.fullName,
+        email: newUser.email,
+        userType: newUser.userType,
+        token,
+        category: newUser.category
+      }
+    });
   } catch (error) {
     console.error('Error registering user: ', error);
     res.status(500).json({ message: 'Internal Server Error' });
@@ -81,16 +92,16 @@ router.post('/login', async (req: Request, res: Response) => {
     );
 
     // Send response with user data and token
-    res
-      .status(200)
-      .json({
-        data:
-        {
-          id: user.id, fullName: user.fullName,
-          email: user.email, userType: user.userType, token,
-          category: user.category
-        }
-      });
+    res.status(200).json({
+      data: {
+        id: user.id,
+        fullName: user.fullName,
+        email: user.email,
+        userType: user.userType,
+        token,
+        category: user.category
+      }
+    });
   } catch (error) {
     console.error('Error logging in: ', error);
     res.status(500).json({ message: 'Internal Server Error' });
@@ -117,17 +128,15 @@ router.get('/validateToken', (req: Request, res: Response) => {
   }
 });
 
-const CLIENT_ID = '682374523124-chs6fq2ctt29ngk5omi23qqv62qm3bg2.apps.googleusercontent.com'; // Replace with your Google client ID
-
 router.post('/google-signin', async (req: Request, res: Response) => {
   try {
     const { idToken, userType } = req.body;
 
     // Verify the token
-    const client = new OAuth2Client(CLIENT_ID);
+    const client = new OAuth2Client(GOOGLE_CLIENT_ID);
     const ticket = await client.verifyIdToken({
       idToken,
-      audience: CLIENT_ID
+      audience: GOOGLE_CLIENT_ID
     });
     const payload = ticket.getPayload();
 
@@ -262,33 +271,40 @@ router.post('/forgot-password', async (req, res) => {
   // Find user by email (you might use a database query here)
   const user = await User.findOne({ where: { email: emailFromRequest } });
 
-  console.log(email);
   if (!user) {
     return res.status(404).json({ message: 'User not found' });
   }
 
   // Generate token
-  const token = crypto.randomBytes(20).toString('hex');
+  const token = jwt.sign(
+    { id: user.id, email: user.email, fullName: user.fullName, userType: user.userType },
+    JWT_SECRET_KEY,
+    { expiresIn: '24h' }
+  );
 
-  // Save the token in the user record or in a temporary store (e.g., Redis) along with the user ID
-  // user.resetToken = token;
-  // user.resetTokenExpiry = Date.now() + 3600000; // Token expires in 1 hour
-
-  // Send reset password email
-  const transporter = nodemailer.createTransport({
-    // Configure email service
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  const options = {
+    // host: 'smtp.gmail.com',
+    // port: 587,
+    // secure: false,
     service: 'gmail',
     auth: {
-      user: 'your@example.com',
-      pass: 'yourpassword'
+      type: 'OAuth2',
+      user: 'modernwalk93@gmail.com',
+      clientId: GOOGLE_CLIENT_ID,
+      clientSecret: GOOGLE_CLIENT_SECRET,
+      refreshToken: REFRESH_TOKEN,
+      accessToken: getAccessToken()
     }
-  });
+  } as TransportOptions;
+
+  const transporter = nodemailer.createTransport(options);
 
   const mailOptions = {
-    from: 'your@example.com',
+    from: 'modernwalk93@gmail.com',
     to: emailFromRequest,
     subject: 'Password Reset',
-    text: `Click this link to reset your password: http://localhost:3000/reset-password?token=${token}`
+    text: `Click this link to reset your password: http://localhost:5173/reset-password?token=${token}`
   };
 
   try {
@@ -297,6 +313,37 @@ router.post('/forgot-password', async (req, res) => {
   } catch (error) {
     console.error('Error sending email:', error);
     res.status(500).json({ message: 'Error sending reset email' });
+  }
+});
+
+router.post('/reset-password', async (req: Request, res: Response) => {
+  const { newPassword, token } = req.body;
+
+  console.log({ newPassword, token });
+
+  try {
+    // Verify and decode token
+    const decoded: any = jwt.verify(token, JWT_SECRET_KEY);
+    const userId = decoded.id;
+
+    // Fetch user from database
+    const user = await User.findOne({ where: { id: userId } });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update user's password and resetToken in the database
+    user.password = hashedPassword;
+    await user.save();
+
+    res.json({ data: { success: true, message: 'Password reset successfully' } });
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    res.status(500).json({ message: 'Error resetting password' });
   }
 });
 

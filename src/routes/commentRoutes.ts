@@ -28,7 +28,7 @@ router.post('/', validateToken, async (req: Request, res: Response) => {
   }
 });
 
-router.get('/', validateAdminToken, async (req: Request, res: Response) => {
+router.get('/', validateToken, async (req: Request, res: Response) => {
   try {
     const comments = await Comment.findAll({
       attributes: {

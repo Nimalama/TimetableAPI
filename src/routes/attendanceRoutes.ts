@@ -125,7 +125,7 @@ router.get('/all', validateAdminToken, async (req: Request, res: Response) => {
         lecturersData.push({
           name: lecturer.fullName,
           totalClasses,
-          attendedClasses: totalAttendedClasses
+          totalAttendedClasses
         });
       }
     }
@@ -162,7 +162,7 @@ router.get('/all', validateAdminToken, async (req: Request, res: Response) => {
         studentsData.push({
           name: student.fullName,
           totalClasses,
-          attendedClasses: totalAttendedClasses
+          totalAttendedClasses
         });
       }
     }

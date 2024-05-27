@@ -2,16 +2,14 @@
 import express from 'express';
 import request from 'supertest';
 
-
-
 import { sequelize } from '../../sequelize';
 import { TimeSlot } from '../models/timeslot.model';
 
 import timeSlotRouter from './timeslotRoutes';
 
-jest.mock('../../src/middleware/validation', () => ({
-    validateAdminToken: jest.fn((req, res, next) => next()),
-    validateToken: jest.fn((req, res, next) => next())
+jest.mock('../middleware/validation', () => ({
+  validateAdminToken: jest.fn((req, res, next) => next()),
+  validateToken: jest.fn((req, res, next) => next())
 }));
 
 const app = express();
@@ -19,48 +17,56 @@ const app = express();
 app.use(express.json());
 app.use('/timeslots', timeSlotRouter);
 
-beforeAll(async () => {
-    await sequelize.sync({ force: true });
+let transaction: any;
+
+beforeEach(async () => {
+  transaction = await sequelize.transaction();
+});
+
+afterEach(async () => {
+  await transaction.rollback();
 });
 
 afterAll(async () => {
-    await sequelize.close();
+  await sequelize.close();
 });
 
 describe('Time Slot Routes', () => {
-    it('should create a new time slot', async () => {
-        const newSlot = { day: '2024-05-19', startTime: '10:00:00', endTime: '11:00:00' };
+  it('should create a new time slot', async () => {
+    const newSlot = { day: '2024-05-19', startTime: '10:00:00', endTime: '11:00:00' };
 
-        const res = await request(app).post('/timeslots').send(newSlot);
+    const res = await request(app).post('/timeslots').send(newSlot).set('transaction', transaction);
 
-        expect(res.status).toBe(201);
-        expect(res.body).toMatchObject(newSlot);
+    expect(res.status).toBe(201);
+    expect(res.body).toMatchObject(newSlot);
 
-        const createdSlot = await TimeSlot.findOne
-            ({ where: { day: newSlot.day, startTime: newSlot.startTime, endTime: newSlot.endTime } });
-
-        expect(createdSlot).not.toBeNull();
-        expect(createdSlot?.day).toBe(newSlot.day);
-        expect(createdSlot?.startTime).toBe(newSlot.startTime);
-        expect(createdSlot?.endTime).toBe(newSlot.endTime);
+    const createdSlot = await TimeSlot.findOne({
+      where: { day: newSlot.day, startTime: newSlot.startTime, endTime: newSlot.endTime },
+      transaction
     });
 
-    it('should return 500 if fetching time slots fails', async () => {
-        jest.spyOn(TimeSlot, 'findAll').mockRejectedValue(new Error('Failed to fetch time slots'));
+    expect(createdSlot).not.toBeNull();
+    expect(createdSlot?.day).toBe(newSlot.day);
+    expect(createdSlot?.startTime).toBe(newSlot.startTime);
+    expect(createdSlot?.endTime).toBe(newSlot.endTime);
+  });
 
-        const res = await request(app).get('/timeslots');
+  it('should return 500 if fetching time slots fails', async () => {
+    jest.spyOn(TimeSlot, 'findAll').mockRejectedValue(new Error('Failed to fetch time slots'));
 
-        expect(res.status).toBe(500);
-        expect(res.body.error).toBe('Failed to fetch time slots');
-    });
+    const res = await request(app).get('/timeslots').set('transaction', transaction);
 
-    it('should return 500 if creating a time slot fails', async () => {
-        jest.spyOn(TimeSlot, 'create').mockRejectedValue(new Error('Failed to create time slot'));
+    expect(res.status).toBe(500);
+    expect(res.body.error).toBe('Failed to fetch time slots');
+  });
 
-        const newSlot = { day: '2024-05-19', startTime: '10:00', endTime: '11:00' };
-        const res = await request(app).post('/timeslots').send(newSlot);
+  it('should return 500 if creating a time slot fails', async () => {
+    jest.spyOn(TimeSlot, 'create').mockRejectedValue(new Error('Failed to create time slot'));
 
-        expect(res.status).toBe(500);
-        expect(res.body.error).toBe('Failed to create time slot');
-    });
+    const newSlot = { day: '2024-05-19', startTime: '10:00', endTime: '11:00' };
+    const res = await request(app).post('/timeslots').send(newSlot).set('transaction', transaction);
+
+    expect(res.status).toBe(500);
+    expect(res.body.error).toBe('Failed to create time slot');
+  });
 });
