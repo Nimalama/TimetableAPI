@@ -153,21 +153,59 @@ router.get('/student', validateStudentToken, async (req: Request, res: Response)
 
 router.post('/', validateAdminToken, async (req, res) => {
   try {
-    const { classRoomId, courseId, timeSlotId, lecturerId, studentIds } = req.body;
+    const { classRoomId, courseId, timeSlotId, lecturerId, studentIds, singleSlot } = req.body;
+
+    console.log(req.body);
 
     // Ensure studentIds is an array
     const serializedStudentIds = Array.isArray(studentIds) ? studentIds.join(',') : studentIds;
 
-    // Create the class routine
-    await ClassRoutine.create({
-      classRoomId,
-      courseId,
-      timeSlotId,
-      lecturerId,
-      studentIds: serializedStudentIds // Pass the serialized studentIds
-    });
+    if (singleSlot) {
+      // Create the class routine
+      await ClassRoutine.create({
+        classRoomId,
+        courseId,
+        timeSlotId,
+        lecturerId,
+        studentIds: serializedStudentIds // Pass the serialized studentIds
+      });
 
-    return res.status(201).json({ data: true });
+      return res.status(201).json({ data: true });
+    }
+
+    if (!singleSlot) {
+      // populate the class routine for the next 12 weeks
+      const startDate = startOfDay(new Date());
+      const endDate = endOfDay(addDays(startOfDay(new Date()), 12 * 7)); // 16 weeks
+
+      // Query for time slots
+      const timeSlots = await TimeSlot.findAll({
+        where: {
+          day: {
+            [Op.between]: [format(startDate, 'yyyy-MM-dd'), format(endDate, 'yyyy-MM-dd')]
+          },
+          startTime: {
+            [Op.or]: [
+              { [Op.between]: [new Date('1970-01-01T07:15:00Z'), new Date('1970-01-01T09:15:00Z')] },
+              { [Op.between]: [new Date('1970-01-01T10:15:00Z'), new Date('1970-01-01T12:15:00Z')] }
+            ]
+          }
+        }
+      });
+
+      // Create the class routine for
+      for (const slot of timeSlots) {
+        await ClassRoutine.create({
+          classRoomId,
+          courseId,
+          timeSlotId: slot.id ? slot.id.toString() : '',
+          lecturerId,
+          studentIds: serializedStudentIds // Pass the serialized studentIds
+        });
+      }
+
+      return res.status(201).json({ data: true });
+    }
   } catch (err) {
     console.error('Error updating class routine:', err);
 
@@ -264,12 +302,19 @@ router.get('/requirements', validateToken, async (req: Request, res: Response) =
     });
 
     const startDate = startOfDay(new Date());
-    const endDate = endOfDay(addDays(startOfDay(new Date()), 20));
+    const endDate = addDays(startOfDay(new Date()), 12 * 7); // 16 weeks
 
+    // Query for time slots
     const timeSlots = await TimeSlot.findAll({
       where: {
         day: {
           [Op.between]: [format(startDate, 'yyyy-MM-dd'), format(endDate, 'yyyy-MM-dd')]
+        },
+        startTime: {
+          [Op.or]: [
+            { [Op.between]: [new Date('1970-01-01T07:15:00Z'), new Date('1970-01-01T09:15:00Z')] },
+            { [Op.between]: [new Date('1970-01-01T10:15:00Z'), new Date('1970-01-01T12:15:00Z')] }
+          ]
         }
       }
     });

@@ -1,12 +1,19 @@
 import express, { Request, Response } from 'express';
-import { Op } from 'sequelize';
+import { Op } from 'sequelize'; // Import the Op symbol from the sequelize package
 
 import { validateAdminToken, validateStudentToken, validateTeacherToken } from '../middleware/validation';
 import { Attendance } from '../models/attendance.model';
 import { ClassRoutine } from '../models/classroutine.model';
+import { Course } from '../models/course.model';
 import { User } from '../models/user.model';
 
 const router = express.Router();
+
+interface CourseInterface {
+  id: number;
+  name: string;
+  // Add other fields if needed
+}
 
 router.post('/', validateTeacherToken, async (req: Request, res: Response) => {
   try {
@@ -35,25 +42,70 @@ router.get('/student', validateStudentToken, async (req: Request, res: Response)
   try {
     const id = req.user?.id ?? '';
 
-    // Get count for attended classes from studentIds includes in attendance table
-    const totalAttendedClasses = await Attendance.count({
+    // Get all class routines where the student is enrolled
+    const classroutines = await ClassRoutine.findAll({
       where: {
         studentIds: {
-          [Op.substring]: id // Look for the student id within the studentIds field
+          [Op.substring]: id
         }
       }
     });
 
-    // Get total classes from classroutine table
-    const totalClasses = await ClassRoutine.count({
+    const allClassRoutineIds = classroutines.map((classroutine) => classroutine.id) as number[];
+
+    // Get all attendances for these class routines
+    const allAttendance = await Attendance.findAll({
       where: {
-        studentIds: {
-          [Op.substring]: id // Look for the student id within the studentIds field
+        classRoutineId: {
+          [Op.in]: allClassRoutineIds
         }
       }
     });
 
-    res.status(200).json({ data: { totalAttendedClasses, totalClasses } });
+    // Get the unique course IDs
+    const courseIds = [...new Set(classroutines.map((classroutine) => classroutine.courseId))] as string[];
+
+    // Get all courses by these IDs
+    const courses = (await Course.findAll({
+      where: {
+        id: {
+          [Op.in]: courseIds
+        }
+      }
+    })) as CourseInterface[];
+
+    // Create a lookup for courses by ID
+    const courseLookup: { [key: number]: CourseInterface } = courses.reduce<{ [key: number]: CourseInterface }>(
+      (acc, course: CourseInterface) => {
+        acc[+course.id] = course;
+
+        return acc;
+      },
+      {}
+    );
+
+    // Calculate the total classes and attendance counts
+    const courseStats = courseIds
+      .map((courseId) => {
+        const courseClassRoutines = classroutines.filter(
+          (cr) => cr.courseId === courseId && allAttendance.some((att) => +att.classRoutineId === cr?.id)
+        );
+        const totalClasses = courseClassRoutines.length;
+        const attendedClasses = courseClassRoutines.filter((cr) =>
+          allAttendance.some((att) => +att.classRoutineId === cr?.id && att.studentIds.includes(id))
+        ).length;
+        const absentClasses = totalClasses - attendedClasses;
+
+        return {
+          courseName: courseLookup[+courseId].name,
+          totalClassesCompleted: totalClasses,
+          totalClassesAttended: attendedClasses,
+          totalAbsentCount: absentClasses
+        };
+      })
+      .filter((courseStat) => courseStat.totalClassesCompleted > 0);
+
+    res.status(200).json({ data: courseStats });
   } catch (error) {
     console.error('Error fetching attendance:', error);
     res.status(500).json({ success: false, error: 'Internal Server Error' });
@@ -65,21 +117,68 @@ router.get('/teacher', validateTeacherToken, async (req: Request, res: Response)
   try {
     const id = req.user?.id ?? '';
 
-    // Get count for attended classes from studentIds includes in attendance table
-    const totalAttendedClasses = await Attendance.count({
+    // Get all class routines where the teacher is the lecturer
+    const classroutines = await ClassRoutine.findAll({
       where: {
-        lecturerId: id // Look for the teacher id within the lecturerId field
+        lecturerId: id
       }
     });
 
-    // Get total classes from classroutine table
-    const totalClasses = await ClassRoutine.count({
+    const allClassRoutineIds = classroutines.map((classroutine) => classroutine.id) as number[];
+
+    // Get all attendances for these class routines
+    const allAttendance = await Attendance.findAll({
       where: {
-        lecturerId: id // Look for the teacher id within the lecturerId field
+        classRoutineId: {
+          [Op.in]: allClassRoutineIds
+        }
       }
     });
 
-    res.status(200).json({ data: { totalAttendedClasses, totalClasses } });
+    // Get the unique course IDs
+    const courseIds = [...new Set(classroutines.map((classroutine) => classroutine.courseId))] as string[];
+
+    // Get all courses by these IDs
+    const courses = (await Course.findAll({
+      where: {
+        id: {
+          [Op.in]: courseIds
+        }
+      }
+    })) as CourseInterface[];
+
+    // Create a lookup for courses by ID
+    const courseLookup: { [key: number]: CourseInterface } = courses.reduce<{ [key: number]: CourseInterface }>(
+      (acc, course: CourseInterface) => {
+        acc[+course.id] = course;
+
+        return acc;
+      },
+      {}
+    );
+
+    // Calculate the total classes and attendance counts
+    const courseStats = courseIds
+      .map((courseId) => {
+        const courseClassRoutines = classroutines.filter(
+          (cr) => cr.courseId === courseId && allAttendance.some((att) => +att.classRoutineId === cr?.id)
+        );
+        const totalClasses = courseClassRoutines.length;
+        const attendedClasses = courseClassRoutines.filter((cr) =>
+          allAttendance.some((att) => +att.classRoutineId === cr?.id)
+        ).length;
+        const absentClasses = totalClasses - attendedClasses;
+
+        return {
+          courseName: courseLookup[+courseId].name,
+          totalClassesCompleted: totalClasses,
+          totalClassesAttended: attendedClasses,
+          totalAbsentCount: absentClasses
+        };
+      })
+      .filter((courseStat) => courseStat.totalClassesCompleted > 0); // Filter out courses with less than 1 total class
+
+    res.status(200).json({ data: courseStats });
   } catch (error) {
     console.error('Error fetching attendance:', error);
     res.status(500).json({ success: false, error: 'Internal Server Error' });
