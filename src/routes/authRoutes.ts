@@ -319,8 +319,6 @@ router.post('/forgot-password', async (req, res) => {
 router.post('/reset-password', async (req: Request, res: Response) => {
   const { newPassword, token } = req.body;
 
-  console.log({ newPassword, token });
-
   try {
     // Verify and decode token
     const decoded: any = jwt.verify(token, JWT_SECRET_KEY);

@@ -5,10 +5,10 @@ dotenv.config();
 
 export const GOOGLE_CLIENT_ID = '682374523124-chs6fq2ctt29ngk5omi23qqv62qm3bg2.apps.googleusercontent.com'; // Replace with your Google client ID
 
-export const GOOGLE_CLIENT_SECRET = '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';
+export const GOOGLE_CLIENT_SECRET = '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';
 
 export const REFRESH_TOKEN =
-  '1//047Zwnq2aoyzQCgYIARAAGAQSNwF-L9IrCe_rc2HhDkdF3eN6QNNZHPfapwZd32OqVqy-eVofQjfHhgl1kNzMKtmhrhkg_0IlSng';
+  '1//0428fJ6OnGm_OCgYIARAAGAQSNwF-L9IrlG4S-2fCdhiete1xVWPUWPpTt4W_Ju0GYRVzMjcAPDad74aN9QmhAKeWS_FUi80nXwc';
 
 export const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY ?? '';
 
