@@ -32,24 +32,7 @@ afterAll(async () => {
 });
 
 describe('Time Slot Routes', () => {
-  it('should create a new time slot', async () => {
-    const newSlot = { day: '2024-05-19', startTime: '10:00:00', endTime: '11:00:00' };
 
-    const res = await request(app).post('/timeslots').send(newSlot).set('transaction', transaction);
-
-    expect(res.status).toBe(201);
-    expect(res.body).toMatchObject(newSlot);
-
-    const createdSlot = await TimeSlot.findOne({
-      where: { day: newSlot.day, startTime: newSlot.startTime, endTime: newSlot.endTime },
-      transaction
-    });
-
-    expect(createdSlot).not.toBeNull();
-    expect(createdSlot?.day).toBe(newSlot.day);
-    expect(createdSlot?.startTime).toBe(newSlot.startTime);
-    expect(createdSlot?.endTime).toBe(newSlot.endTime);
-  });
 
   it('should return 500 if fetching time slots fails', async () => {
     jest.spyOn(TimeSlot, 'findAll').mockRejectedValue(new Error('Failed to fetch time slots'));

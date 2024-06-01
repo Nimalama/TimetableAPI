@@ -40,7 +40,9 @@ module.exports = {
     await queryInterface.bulkInsert(
       'TimeSlots',
       timeSlots.map((slot) => ({
-        ...slot
+        ...slot,
+        createdAt: format(currentDate, 'yyyy-MM-dd HH:mm:ss'),
+        updatedAt: format(currentDate, 'yyyy-MM-dd HH:mm:ss')
       })),
       {}
     );

@@ -2,7 +2,6 @@ import express from 'express';
 import request from 'supertest';
 
 import { sequelize } from '../../sequelize';
-import { Classroom } from '../models/classroom.model';
 
 import classroomRouter from './classroomRoutes';
 
